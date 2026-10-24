@@ -18,6 +18,13 @@ sbox = [
     [0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16]
 ]
 
+inv_sbox=[[0]*16 for i in range(16)]
+for i in range(16):
+    for j in range(16):
+        num=sbox[i][j]
+        inv_sbox[num>>4][num & 0x0F]=(i<<4)|j
+
+
 rcon = [
     [0x01, 0x00, 0x00, 0x00],
     [0x02, 0x00, 0x00, 0x00],
@@ -80,6 +87,18 @@ def xtime(byte):
         result^=0x11B
     return result & 0xFF
 
+def multiply(a,b):
+    result=0
+
+    while b:
+        if b & 1:
+            result^=a
+
+        a=xtime(a)
+        b>>=1
+
+    return result
+
 def mix_columns(state):
     result=[[0]*4 for i in range(4)]
 
@@ -96,11 +115,27 @@ def mix_columns(state):
 
     return result
 
+def inv_mix_columns(state):
+    result=[[0]*4 for i in range(4)]
+
+    for j in range(4):
+        a=state[0][j]
+        b=state[1][j]
+        c=state[2][j]
+        d=state[3][j]
+
+        result[0][j]=multiply(a,0x0E)^multiply(b,0x0B)^multiply(c,0x0D)^multiply(d,0x09)
+        result[1][j]=multiply(a,0x09)^multiply(b,0x0E)^multiply(c,0x0B)^multiply(d,0x0D)
+        result[2][j]=multiply(a,0x0D)^multiply(b,0x09)^multiply(c,0x0E)^multiply(d,0x0B)
+        result[3][j]=multiply(a,0x0B)^multiply(b,0x0D)^multiply(c,0x09)^multiply(d,0x0E)
+
+    return result
+
 key=key_expansion()
 for i in range(0,len(data),16):
     state=list(data[i:i+16])
 #key itu [11][4][4] 4 word masing masing 4 byte, 11 key
-#state itu 16 byte per block
+#state itu 16 byte per block, ada banyak blok [x][16]
 
 def encrypt():
     for i in range(16):
@@ -112,7 +147,7 @@ def encrypt():
             state[j]=sbox[state[j]>>4][state[j] & 0x0F]
                 
         #shiftrow
-        state4=[[state[j+k*4] for j in range(4)] for k in range(4)]
+        state4=[[state[k+j*4] for j in range(4)] for k in range(4)]
             
         for j in range(len(state4)):
             state4[j]=state4[j][j:] + state4[j][:j]
@@ -120,7 +155,7 @@ def encrypt():
         if i!=10:
             state4=mix_columns(state4)
 
-        state=[state4[j][k] for k in range(4) for j in range(4)]
+        state=[state4[k][j] for j in range(4) for k in range(4)]
         #addroundkey
         for j in range(16):
             state[j]^=key[i][j%4][j//4]
@@ -129,12 +164,29 @@ def encrypt():
     return bytes(state)
             
         
-            
-                
-                
+def decrypt():
+    for i in range(16):
+        state[i]^=key[10][i%4][i//4]
+    for i in range(9,-1,-1):
+        #invshiftrow
+        state4=[[state[k+j*4] for j in range(4)] for k in range(4)]
+        for j in range(len(state4)):
+            state4[j]=state4[j][-j:] + state4[j][:-j]
+        
+        state=[state4[k][j] for j in range(4) for k in range(4)]
+        #invsubbox
+        for j in range(len(state)):
+            state[j]=inv_sbox[state[j]>>4][state[j] & 0x0F]
+        #addroundkey
+        for j in range(16):
+            state[j]^=key[i][j%4][j//4]
+        #invmixcolumn
+        if i!=0:
+            state4=[[state[k+j*4] for j in range(4)] for k in range(4)]
+            state4=inv_mix_columns(state4)
+            state=[state4[k][j] for j in range(4) for k in range(4)]
+        
+    return bytes(state)
         
 
-
-def decrypt():
-    pass
-
+        
