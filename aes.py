@@ -1,4 +1,3 @@
-import kdc
 sbox = [
     [0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76],
     [0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0],
@@ -37,8 +36,7 @@ rcon = [
     [0x1B, 0x00, 0x00, 0x00],
     [0x36, 0x00, 0x00, 0x00]
 ]
-plaintext="mas amba amba amba amba amba amba"
-data=plaintext.encode("utf-8")
+
 
 def transform(w2,r):
     #rotate
@@ -52,14 +50,15 @@ def transform(w2,r):
     
     return w2
 
-def key_expansion():
-    kdc_key=kdc.key() 
+def key_expansion(k_key):
+    k_key = list(k_key)
+    
     w=[]
-    w.append(kdc_key[0:4])
-    w.append(kdc_key[4:8])
-    w.append(kdc_key[8:12])
-    w.append(kdc_key[12:16])
-    key=[]
+    w.append(k_key[0:4])
+    w.append(k_key[4:8])
+    w.append(k_key[8:12])
+    w.append(k_key[12:16])
+    round_key=[]
     for i in range(4,44):
         
         result=[]
@@ -77,9 +76,9 @@ def key_expansion():
             w.append(result)
             
     for i in range(0,44,4):
-        key.append(w[i:i+4])
+        round_key.append(w[i:i+4])
         
-    return key
+    return round_key
 
 def xtime(byte):
     result=byte<<1
@@ -131,15 +130,16 @@ def inv_mix_columns(state):
 
     return result
 
-key=key_expansion()
-for i in range(0,len(data),16):
-    state=list(data[i:i+16])
+
 #key itu [11][4][4] 4 word masing masing 4 byte, 11 key
 #state itu 16 byte per block, ada banyak blok [x][16]
 
-def encrypt():
+def encrypt(state,k_key):
+    state=list(state)
+    round_key=key_expansion(k_key)
+    
     for i in range(16):
-        state[i]^=key[0][i%4][i//4]
+        state[i]^=round_key[0][i%4][i//4]
         
     for i in range(1,11):
         #subbox
@@ -151,22 +151,28 @@ def encrypt():
             
         for j in range(len(state4)):
             state4[j]=state4[j][j:] + state4[j][:j]
+            
         #mixcolumn
         if i!=10:
             state4=mix_columns(state4)
 
         state=[state4[k][j] for j in range(4) for k in range(4)]
+        
         #addroundkey
         for j in range(16):
-            state[j]^=key[i][j%4][j//4]
+            state[j]^=round_key[i][j%4][j//4]
             
             
     return bytes(state)
             
         
-def decrypt():
+def decrypt(state,k_key):
+    state=list(state)
+    round_key=key_expansion(k_key)
+    
     for i in range(16):
-        state[i]^=key[10][i%4][i//4]
+        state[i]^=round_key[10][i%4][i//4]
+        
     for i in range(9,-1,-1):
         #invshiftrow
         state4=[[state[k+j*4] for j in range(4)] for k in range(4)]
@@ -174,12 +180,15 @@ def decrypt():
             state4[j]=state4[j][-j:] + state4[j][:-j]
         
         state=[state4[k][j] for j in range(4) for k in range(4)]
+        
         #invsubbox
         for j in range(len(state)):
             state[j]=inv_sbox[state[j]>>4][state[j] & 0x0F]
+            
         #addroundkey
         for j in range(16):
-            state[j]^=key[i][j%4][j//4]
+            state[j]^=round_key[i][j%4][j//4]
+            
         #invmixcolumn
         if i!=0:
             state4=[[state[k+j*4] for j in range(4)] for k in range(4)]
