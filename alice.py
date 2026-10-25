@@ -2,7 +2,7 @@ import json
 
 from config import KDC_IP, KDC_PORT, BOB_IP, BOB_PORT, ID_ALICE, ID_BOB
 from network import connect_to, send_json, send_msg, recv_msg
-from utils import encrypt_data, decrypt_data, input_key, generate_nonce, transform_nonce
+from utils import encrypt_data, decrypt_data, input_key, generate_nonce, transform_nonce, chat
 
 def request_session_key(ka):
     nonce=generate_nonce()
@@ -64,14 +64,17 @@ def handshake_with_bob(session_key,ticket):
 
 
 if __name__=="__main__":
-    while True:
-        ka=input_key("alice key: ")
-        try:
-            session_key,ticket=request_session_key(ka)
-            bob=handshake_with_bob(session_key,ticket)
-            break
-        except (ValueError, KeyError, OSError) as error:
-            print(error)
+    try:
+        while True:
+            ka=input_key("alice key: ")
+            try:
+                session_key,ticket=request_session_key(ka)
+                bob=handshake_with_bob(session_key,ticket)
+            except (ValueError, KeyError, OSError) as error:
+                print(error)
+                continue
 
-    print("handshake selesai")
-    bob.close()
+            print("handshake selesai, ketik pesan untuk Bob (/keluar untuk ganti key)")
+            chat(bob,session_key,ID_BOB)
+    except (KeyboardInterrupt, EOFError):
+        print()

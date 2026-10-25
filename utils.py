@@ -1,6 +1,9 @@
 import secrets
+import socket
+import threading
 
 from aes import encrypt as aes_encrypt, decrypt as aes_decrypt
+from network import send_msg, recv_msg
 
 def encrypt_data(data,key):
     padding_length=16-len(data)%16
@@ -38,3 +41,45 @@ def generate_nonce():
 
 def transform_nonce(nonce):
     return format(int(nonce,16)+1,f"0{len(nonce)}x")
+
+def chat(conn,session_key,peer):
+    done=threading.Event()
+
+    def receive():
+        while True:
+            try:
+                ciphertext=recv_msg(conn)
+            except OSError:
+                if not done.is_set():
+                    print(f"\n{peer} menutup koneksi, tekan Enter")
+                    done.set()
+                return
+
+            print(f"\n[{peer}] ciphertext (hex): {ciphertext.hex()}")
+            try:
+                print(f"[{peer}] plaintext: {decrypt_data(ciphertext,session_key).decode('ascii')}")
+            except ValueError as error:
+                print(f"[{peer}] gagal decrypt: {error}")
+
+    threading.Thread(target=receive,daemon=True).start()
+
+    while not done.is_set():
+        text=input()
+        if done.is_set() or text=="/keluar":
+            break
+        if not text:
+            continue
+        if not text.isascii():
+            print("plaintext harus ASCII")
+            continue
+
+        ciphertext=encrypt_data(text.encode("ascii"),session_key)
+        send_msg(conn,ciphertext)
+        print("terkirim, ciphertext (hex):",ciphertext.hex())
+
+    done.set()
+    try:
+        conn.shutdown(socket.SHUT_RDWR)
+    except OSError:
+        pass
+    conn.close()

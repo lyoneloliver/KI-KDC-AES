@@ -2,7 +2,7 @@ import json
 
 from config import LISTEN_HOST, BOB_PORT, ID_ALICE
 from network import create_server, accept_client, send_msg, recv_msg
-from utils import encrypt_data, decrypt_data, input_key, generate_nonce, transform_nonce
+from utils import encrypt_data, decrypt_data, input_key, generate_nonce, transform_nonce, chat
 
 def handshake_with_alice(alice,kb):
     ticket=recv_msg(alice)
@@ -37,19 +37,24 @@ def handshake_with_alice(alice,kb):
 
 
 if __name__=="__main__":
-    kb=input_key("bob key: ")
-
     server=create_server(LISTEN_HOST,BOB_PORT)
-    print("Bob menunggu di port",BOB_PORT)
 
-    while True:
-        alice,addr=accept_client(server)
-        print("koneksi dari",addr)
+    try:
+        while True:
+            kb=input_key("bob key: ")
+            print("Bob menunggu di port",BOB_PORT)
 
-        try:
-            session_key=handshake_with_alice(alice,kb)
-            print("handshake selesai")
-        except (ValueError, KeyError, OSError) as error:
-            print(error)
-        finally:
-            alice.close()
+            alice,addr=accept_client(server)
+            print("koneksi dari",addr)
+
+            try:
+                session_key=handshake_with_alice(alice,kb)
+            except (ValueError, KeyError, OSError) as error:
+                print(error)
+                alice.close()
+                continue
+
+            print("handshake selesai, ketik pesan untuk Alice (/keluar untuk ganti key)")
+            chat(alice,session_key,ID_ALICE)
+    except (KeyboardInterrupt, EOFError):
+        print()
