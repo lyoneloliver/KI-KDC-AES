@@ -1,8 +1,8 @@
 import json
 
-from config import KDC_IP, KDC_PORT, ID_ALICE, ID_BOB
-from network import connect_to, send_json, recv_msg
-from utils import decrypt_data, input_key, generate_nonce
+from config import KDC_IP, KDC_PORT, BOB_IP, BOB_PORT, ID_ALICE, ID_BOB
+from network import connect_to, send_json, send_msg, recv_msg
+from utils import encrypt_data, decrypt_data, input_key, generate_nonce, transform_nonce
 
 def request_session_key(ka):
     nonce=generate_nonce()
@@ -39,12 +39,39 @@ def request_session_key(ka):
 
     return session_key,ticket
 
+def handshake_with_bob(session_key,ticket):
+    bob=connect_to(BOB_IP,BOB_PORT)
+    try:
+        send_msg(bob,ticket)
+        print("[3] ticket dikirim ke Bob")
+
+        encrypted_nonce=recv_msg(bob)
+        print("[4] E(Ks, N2) dari Bob (hex):",encrypted_nonce.hex())
+
+        nonce=decrypt_data(encrypted_nonce,session_key).decode("ascii")
+        print("[4] N2:",nonce)
+
+        answer=transform_nonce(nonce)
+        reply=encrypt_data(answer.encode("ascii"),session_key)
+        send_msg(bob,reply)
+        print("[5] f(N2):",answer)
+        print("[5] E(Ks, f(N2)) (hex):",reply.hex())
+    except Exception:
+        bob.close()
+        raise
+
+    return bob
+
 
 if __name__=="__main__":
     while True:
         ka=input_key("alice key: ")
         try:
             session_key,ticket=request_session_key(ka)
+            bob=handshake_with_bob(session_key,ticket)
             break
         except (ValueError, KeyError, OSError) as error:
             print(error)
+
+    print("handshake selesai")
+    bob.close()

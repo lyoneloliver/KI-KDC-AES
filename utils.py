@@ -37,4 +37,4 @@ def generate_nonce():
     return secrets.token_hex(8)
 
 def transform_nonce(nonce):
-    return format(int(nonce,16)+1,"x")
+    return format(int(nonce,16)+1,f"0{len(nonce)}x")
