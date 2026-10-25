@@ -5,8 +5,6 @@
 | 5025241145 | Lyonel Oliver Dwiputra |
 | 5025241177 | Hosea Felix Sanjaya |
 
-Tugas 2 Keamanan Informasi. Alice dan Bob mendapat session key dari KDC, lalu chat dua arah dengan AES-128. AES dan KDC ditulis sendiri tanpa library kriptografi.
-
 ## File
 
 | File | Isi |
@@ -18,6 +16,7 @@ Tugas 2 Keamanan Informasi. Alice dan Bob mendapat session key dari KDC, lalu ch
 | `network.py` | Kirim dan terima pesan lewat TCP (4 byte panjang, lalu isi pesan) |
 | `utils.py` | Enkripsi banyak blok (ECB dan padding PKCS#7), nonce, input key, chat |
 | `config.py` | IP, port, dan ID |
+| `test.py` | Tes lokal: AES dengan vektor FIPS-197, enkripsi dan padding, langkah 3 sampai 5. Jalankan `python test.py` |
 
 ## Alur key distribution
 
@@ -70,5 +69,3 @@ Filter:
 ```
 tcp.port == 5000 || tcp.port == 5002
 ```
-
-Pilih interface Wi-Fi atau Ethernet kalau memakai tiga perangkat, atau loopback kalau semua di satu laptop. Port 5000 berisi langkah 1 dan 2, port 5002 berisi langkah 3 sampai 5 dan chat. Hanya langkah 1 yang terbaca sebagai teks, sisanya ciphertext.
