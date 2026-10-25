@@ -42,9 +42,6 @@ def create_ticket(session_key):
     plaintext=json.dumps(ticket).encode("utf-8")
     return encrypt_data(plaintext,session_key)
     
-server=create_server(LISTEN_HOST,KDC_PORT)
-print(KDC_PORT)
-
 def create_response(session_key,ticket,nonce):
     response={
         "session_key":session_key.hex(),
@@ -76,19 +73,21 @@ while True:
     try:
         request=json.loads(recv_msg(client).decode("utf-8"))
         
-        id_alice=request.get["id_alice"]
-        id_bob=request.get["id_bob"]
-        nonce=request.get["nonce"]
+        id_alice=request.get("id_alice")
+        id_bob=request.get("id_bob")
+        nonce=request.get("nonce")
         
         if id_alice!=ID_ALICE or id_bob!=ID_BOB:
             send_msg(client,b"Invalid request")
+            continue
             
         if not isinstance(nonce,str) or not nonce:
             send_msg(client,b"Invalid nonce")
+            continue
         
         session_key=sesh_key()
-        ticket=create_ticket(session_key)
-        response=create_response(session_key,ticket,nonce)
+        ticket=create_ticket(kb)
+        response=create_response(ka,ticket,nonce)
         
         send_msg(client,response)
         

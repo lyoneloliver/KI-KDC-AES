@@ -139,7 +139,7 @@ def encrypt(state,k_key):
     round_key=key_expansion(k_key)
     
     for i in range(16):
-        state[i]^=round_key[0][i%4][i//4]
+        state[i]^=round_key[0][i//4][i%4]
         
     for i in range(1,11):
         #subbox
@@ -160,7 +160,7 @@ def encrypt(state,k_key):
         
         #addroundkey
         for j in range(16):
-            state[j]^=round_key[i][j%4][j//4]
+            state[j]^=round_key[i][j//4][j%4]
             
             
     return bytes(state)
@@ -171,7 +171,7 @@ def decrypt(state,k_key):
     round_key=key_expansion(k_key)
     
     for i in range(16):
-        state[i]^=round_key[10][i%4][i//4]
+        state[i]^=round_key[10][i//4][i%4]
         
     for i in range(9,-1,-1):
         #invshiftrow
@@ -187,7 +187,7 @@ def decrypt(state,k_key):
             
         #addroundkey
         for j in range(16):
-            state[j]^=round_key[i][j%4][j//4]
+            state[j]^=round_key[i][j//4][j%4]
             
         #invmixcolumn
         if i!=0:
