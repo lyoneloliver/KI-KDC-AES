@@ -1,3 +1,4 @@
+import json
 import socket
 
 def create_server(host,port):
@@ -39,3 +40,9 @@ def recv_msg(connection):
     size=int.from_bytes(header,"big")
     return recv_all(connection,size)
     
+
+def send_json(connection,obj):
+    send_msg(connection,json.dumps(obj).encode("utf-8"))
+
+def recv_json(connection):
+    return json.loads(recv_msg(connection).decode("utf-8"))
