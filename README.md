@@ -53,6 +53,8 @@ python alice.py    # laptop Alice
 
 Key harus 16 karakter ASCII. Key Alice yang diisi di KDC harus sama dengan yang diketik di `alice.py`, begitu juga key Bob.
 
+Untuk ganti key di KDC tanpa restart, ketik `/ganti` di terminal KDC lalu masukkan key Alice dan key Bob yang baru.
+
 Port 5000 (KDC) dan 5002 (Bob) harus dibuka di firewall.
 
 ## Chat
