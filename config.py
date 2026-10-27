@@ -1,15 +1,10 @@
-KDC_IP = ""
-ALICE_IP = ""
-BOB_IP = ""
+KDC_IP = "127.0.0.1"
+BOB_IP = "127.0.0.1"
 
 KDC_PORT = 5000
-ALICE_PORT = 5001
 BOB_PORT = 5002
 
 LISTEN_HOST = "0.0.0.0"
 
-ID_KDC = "KDC"
 ID_ALICE = "Alice"
 ID_BOB = "Bob"
-
-AES_BLOCK_SIZE = 16
