@@ -39,8 +39,8 @@ KDC dan Bob jadi server, Alice jadi client. Koneksi Alice ke Bob dipakai dua ara
 Di laptop Alice, ganti IP di `config.py` dengan IP laptop KDC dan Bob, contoh:
 
 ```python
-KDC_IP = "192.168.1.10"
-BOB_IP = "192.168.1.20"
+KDC_IP = "172.20.0.10"
+BOB_IP = "172.20.0.20"
 ```
 
 Lalu jalankan sesuai urutan:
@@ -53,16 +53,45 @@ python alice.py    # laptop Alice
 
 Key harus 16 karakter ASCII. Key Alice yang diisi di KDC harus sama dengan yang diketik di `alice.py`, begitu juga key Bob.
 
-Untuk ganti key di KDC tanpa restart, ketik `/ganti` di terminal KDC lalu masukkan key Alice dan key Bob yang baru.
-
 Port 5000 (KDC) dan 5002 (Bob) harus dibuka di firewall.
+
+### Docker
+
+Buat network sekali:
+
+```
+docker network create --subnet 172.20.0.0/24 kdcnet
+```
+
+Isi `config.py`:
+
+```python
+KDC_IP = "172.20.0.10"
+BOB_IP = "172.20.0.20"
+```
+
+Jalankan di tiga terminal sesuai urutan:
+
+```
+docker run -it --rm --name kdc --network kdcnet --ip 172.20.0.10 -v "$PWD":/app -w /app python:3-slim python kdc.py
+docker run -it --rm --name bob --network kdcnet --ip 172.20.0.20 -v "$PWD":/app -w /app python:3-slim python bob.py
+docker run -it --rm --name alice --network kdcnet --ip 172.20.0.30 -v "$PWD":/app -w /app python:3-slim python alice.py
+```
 
 ## Chat
 
 - Ketik pesan lalu Enter. Plaintext harus ASCII.
 - Pengirim melihat ciphertext dalam hex. Penerima melihat ciphertext dan plaintext.
-- `/keluar` menutup sesi. Alice dan Bob lalu diminta key lagi, dan langkah 1 sampai 5 diulang dengan session key baru.
 - Ctrl+C untuk keluar.
+
+## Ganti key tanpa restart
+
+| Perintah | Di mana | Fungsi |
+|---|---|---|
+| `/ganti` | KDC | Ganti Ka dan Kb yang disimpan KDC |
+| `/baru` | Alice / Bob | Tutup sesi, masukkan key lagi, lalu langkah 1 sampai 5 diulang dengan session key baru |
+
+Untuk ganti key, `/ganti` dulu di KDC, lalu `/baru` di Alice dan Bob dan masukkan key baru yang sama. Masukkan key Bob dulu, baru Alice. Kalau key hanya diganti di satu sisi, decrypt akan gagal.
 
 ## Wireshark
 

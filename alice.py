@@ -74,7 +74,7 @@ if __name__=="__main__":
                 print(error)
                 continue
 
-            print("handshake selesai, ketik pesan untuk Bob (/keluar untuk ganti key)")
+            print("handshake selesai, ketik pesan untuk Bob (/baru untuk ganti key)")
             chat(bob,session_key,ID_BOB)
     except (KeyboardInterrupt, EOFError):
         print()

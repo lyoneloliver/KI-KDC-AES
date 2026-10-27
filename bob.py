@@ -54,7 +54,7 @@ if __name__=="__main__":
                 alice.close()
                 continue
 
-            print("handshake selesai, ketik pesan untuk Alice (/keluar untuk ganti key)")
+            print("handshake selesai, ketik pesan untuk Alice (/baru untuk ganti key)")
             chat(alice,session_key,ID_ALICE)
     except (KeyboardInterrupt, EOFError):
         print()

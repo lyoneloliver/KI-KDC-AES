@@ -65,7 +65,7 @@ def chat(conn,session_key,peer):
 
     while not done.is_set():
         text=input()
-        if done.is_set() or text=="/keluar":
+        if done.is_set() or text=="/baru":
             break
         if not text:
             continue
